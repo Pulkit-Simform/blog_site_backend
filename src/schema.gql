@@ -1,0 +1,37 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  username: String!
+  email: String!
+  password: String!
+}
+
+type ResponseUserDto {
+  access_token: String
+}
+
+type Query {
+  hello: String!
+  findUserByEmail(email: String!): User!
+  findUserByUsername(username: String!): User!
+  getAll: [User!]!
+  logout: ResponseUserDto!
+}
+
+type Mutation {
+  register(createUserInput: CreateUserDto!): ResponseUserDto!
+  login(loginUserInput: LoginUserDto!): ResponseUserDto!
+}
+
+input CreateUserDto {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input LoginUserDto {
+  username: String!
+  password: String!
+}
