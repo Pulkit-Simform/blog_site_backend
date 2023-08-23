@@ -12,17 +12,33 @@ type ResponseUserDto {
   access_token: String
 }
 
+type reduxValidateToken {
+  access_token: String
+  success: Boolean
+}
+
+type Profile {
+  user_id: User!
+  firstName: String!
+  middleName: String
+  lastname: String!
+  profileImage: String!
+}
+
 type Query {
   hello: String!
   findUserByEmail(email: String!): User!
   findUserByUsername(username: String!): User!
   getAll: [User!]!
-  logout: ResponseUserDto!
+  logout: Boolean!
+  validateUser: reduxValidateToken!
+  ProfileChecker: Boolean!
 }
 
 type Mutation {
   register(createUserInput: CreateUserDto!): ResponseUserDto!
   login(loginUserInput: LoginUserDto!): ResponseUserDto!
+  createProfile(profile: CreateProfileDtos!): Profile!
 }
 
 input CreateUserDto {
@@ -35,3 +51,13 @@ input LoginUserDto {
   username: String!
   password: String!
 }
+
+input CreateProfileDtos {
+  firstName: String!
+  middleName: String
+  lastName: String!
+  profileImage: Upload!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload

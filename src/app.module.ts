@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
-import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './utils/database/database.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './modules/users/users.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ProfileModule } from './profile/profile.module';
+import { ProfileModule } from './modules/profile/profile.module';
 import { AppResolver } from './app.resolver';
 import { AppController } from './app.controller';
+import { JwtModule } from '@nestjs/jwt';
+// import ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 @Module({
   imports: [
@@ -22,15 +23,31 @@ import { AppController } from './app.controller';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       driver: ApolloDriver,
-      context: ({ req, res }) => ({ req, res }),
-      // playground: false,
-      // introspection: true,
+      context: ({ req, res }) => {
+        console.log('Loading request', req);
+        return {
+          req: req,
+          res: res,
+        };
+      },
       playground: {
         settings: {
           'request.credentials': 'include', // Otherwise cookies won't be sent
         },
       },
+      // playground: false,
+      // introspection: true,
       // plugins: [ApolloServerPluginLandingPageLocalDefault()],
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN'),
+        },
+      }),
+      inject: [ConfigService],
     }),
     DatabaseModule,
     UsersModule,

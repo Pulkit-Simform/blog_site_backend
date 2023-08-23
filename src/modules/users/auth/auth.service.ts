@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UsersService } from '../users.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
-import { ResponseUserDto } from './dto/response-user-dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -58,10 +57,14 @@ export class AuthService {
       throw new BadRequestException('username or password is invalid');
     }
 
-    return await this.jwtService.sign({ id: availableUser._id });
+    return await this.jwtService.signAsync({ id: availableUser._id });
   }
 
-  async logout(): Promise<undefined> {
-    return undefined;
+  async validateUser(payload: string): Promise<boolean> {
+    const token = await this.jwtService.verify(payload);
+    const findUser = await this.usersService.findUserById(token.id);
+
+    if (findUser !== undefined) return true;
+    return false;
   }
 }
