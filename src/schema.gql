@@ -40,6 +40,7 @@ type Mutation {
   register(createUserInput: CreateUserDto!): ResponseUserDto!
   login(loginUserInput: LoginUserDto!): ResponseUserDto!
   createProfile(profile: InputProfileDtos!): Profile!
+  updateProfile(profile: UpdateProfileDtos!): Profile!
 }
 
 input CreateUserDto {
@@ -62,3 +63,10 @@ input InputProfileDtos {
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+input UpdateProfileDtos {
+  firstName: String
+  middleName: String
+  lastName: String
+  profileImage: Upload
+}

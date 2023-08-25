@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, PartialType } from '@nestjs/graphql';
 import { IsString, MaxLength, MinLength } from 'class-validator';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import { User } from 'src/modules/users/entity/users.entity';
@@ -14,7 +14,8 @@ export interface FileUpload {
   createReadStream: () => Stream;
 }
 
-@InputType()
+// for object body
+@InputType({ isAbstract: true })
 export class InputProfileDtos {
   @Field()
   @IsString()
@@ -46,6 +47,8 @@ export class ImageOnlyProfile {
   profileImage: Promise<FileUpload>;
 }
 
+// This is for creating a new profile before it is store in the database
+// specifically for db insertion
 @ObjectType()
 export class CreateProfileDtos {
   @Field()
@@ -66,3 +69,8 @@ export class CreateProfileDtos {
   @Field(() => String)
   profileImageKeyName: string;
 }
+
+// for updating the profile
+// @ObjectType({ isAbstract: true })
+@InputType()
+export class UpdateProfileDtos extends PartialType(InputProfileDtos) {}
