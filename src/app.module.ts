@@ -18,18 +18,15 @@ import { JwtModule } from '@nestjs/jwt';
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         MONGODB_URL: Joi.string().required(),
+        AWS_REGION: Joi.string().required(),
+        AWS_ACCESS_KEY: Joi.string().required(),
+        AWS_SECRET_ACCESS_KEY: Joi.string().required(),
       }),
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       driver: ApolloDriver,
-      context: ({ req, res }) => {
-        console.log('Loading request', req);
-        return {
-          req: req,
-          res: res,
-        };
-      },
+      context: ({ req, res }) => ({ req, res }),
       playground: {
         settings: {
           'request.credentials': 'include', // Otherwise cookies won't be sent

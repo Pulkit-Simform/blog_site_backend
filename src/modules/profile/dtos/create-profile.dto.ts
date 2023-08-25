@@ -1,6 +1,7 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsString, MaxLength, MinLength } from 'class-validator';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
+import { User } from 'src/modules/users/entity/users.entity';
 import { Stream } from 'stream';
 
 /**
@@ -14,7 +15,7 @@ export interface FileUpload {
 }
 
 @InputType()
-export class CreateProfileDtos {
+export class InputProfileDtos {
   @Field()
   @IsString()
   @MaxLength(100)
@@ -43,4 +44,25 @@ export class ImageOnlyProfile {
   @Field(() => GraphQLUpload)
   @IsString()
   profileImage: Promise<FileUpload>;
+}
+
+@ObjectType()
+export class CreateProfileDtos {
+  @Field()
+  user_id: User;
+
+  @Field(() => String)
+  firstName: string;
+
+  @Field(() => String, { nullable: true })
+  middleName?: string;
+
+  @Field(() => String)
+  lastName: string;
+
+  @Field(() => String)
+  profileImage: string;
+
+  @Field(() => String)
+  profileImageKeyName: string;
 }
