@@ -10,7 +10,7 @@ export class Profile extends Document {
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }] })
   user_id: User;
 
-  @Field()
+  @Field(() => String)
   @Prop({
     type: String,
     required: [true, 'First name should be required'],
@@ -34,7 +34,7 @@ export class Profile extends Document {
     maxlength: 255,
     minlength: 1,
   })
-  lastname: string;
+  lastName: string;
 
   @Field()
   @Prop({
@@ -42,6 +42,13 @@ export class Profile extends Document {
     required: [true, 'profile image should be required'],
   })
   profileImage: string;
+
+  @Field({ nullable: true })
+  @Prop({
+    type: String,
+    required: [true, 'profile image key name should be required'],
+  })
+  profileImageKeyName?: string;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

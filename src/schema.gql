@@ -21,8 +21,9 @@ type Profile {
   user_id: User!
   firstName: String!
   middleName: String
-  lastname: String!
+  lastName: String!
   profileImage: String!
+  profileImageKeyName: String
 }
 
 type Query {
@@ -38,7 +39,7 @@ type Query {
 type Mutation {
   register(createUserInput: CreateUserDto!): ResponseUserDto!
   login(loginUserInput: LoginUserDto!): ResponseUserDto!
-  createProfile(profile: CreateProfileDtos!): Profile!
+  createProfile(profile: InputProfileDtos!): Profile!
 }
 
 input CreateUserDto {
@@ -52,7 +53,7 @@ input LoginUserDto {
   password: String!
 }
 
-input CreateProfileDtos {
+input InputProfileDtos {
   firstName: String!
   middleName: String
   lastName: String!

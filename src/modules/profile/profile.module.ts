@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../users/auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProfileSchema } from './entity/profile.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Module({
   imports: [
@@ -20,6 +22,15 @@ import { ProfileSchema } from './entity/profile.entity';
     ConfigModule,
     AuthModule,
   ],
-  providers: [ProfileService, ProfileResolver, JwtService, ConfigService],
+  providers: [
+    ProfileService,
+    ProfileResolver,
+    JwtService,
+    ConfigService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class ProfileModule {}

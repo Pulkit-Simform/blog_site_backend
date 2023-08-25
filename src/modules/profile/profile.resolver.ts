@@ -1,9 +1,10 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthGuard } from 'src/guards/auth.guard';
-import { CreateProfileDtos } from './dtos/create-profile.dto';
+import { CreateProfileDtos, InputProfileDtos } from './dtos/create-profile.dto';
 import { Profile } from './entity/profile.entity';
 import { ProfileService } from './profile.service';
+
 // import { FileInterceptor } from '@nestjs/platform-express';
 
 @Resolver()
@@ -16,25 +17,36 @@ export class ProfileResolver {
     return true;
   }
 
-  // @Mutation(() => Profile)
-  // @UseInterceptors(FileInterceptor('profileImage'))
-  // async createProfile(
-  //   @Args('profileImage',{ () => }) profileImage: ImageOnlyProfile,
-  //   @Args('data') data: BaseProfileDtos,
-  // ): Promise<Profile> {
-  //   const createProfile: CreateProfileDtos = {
-  //     data,
-  //     profileImage,
-  //   };
-
-  //   return await this.profileService.createProfile(createProfile);
-  // }
-
   @Mutation(() => Profile)
   async createProfile(
-    @Args('profile') profile: CreateProfileDtos,
+    @Args('profile') profile: InputProfileDtos,
+    @Context() context: any,
   ): Promise<Profile> {
-    console.log('Profile invoked');
-    return await this.profileService.createProfile(profile);
+    // get all variables
+    const { createReadStream, filename, mimetype } = await profile.profileImage;
+    const { firstName, middleName, lastName } = profile;
+
+    // upload file to s3 and get keyName from it
+    const fileUploadKeyName = await this.profileService.uploadFile(
+      filename,
+      createReadStream(),
+      mimetype,
+    );
+
+    // for getting pre signed url for profile
+    const preSignedURL = await this.profileService.generatePresignedUrl(
+      fileUploadKeyName,
+    );
+
+    const profileObj: CreateProfileDtos = {
+      profileImageKeyName: fileUploadKeyName,
+      profileImage: preSignedURL,
+      firstName,
+      middleName,
+      lastName,
+      user_id: context.res.locals.user_id,
+    };
+
+    return await this.profileService.createProfile(profileObj);
   }
 }

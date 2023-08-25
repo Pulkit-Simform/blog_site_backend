@@ -19,6 +19,8 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // const request = context.switchToHttp().getRequest();
+
     // find the context
     const ctx = GqlExecutionContext.create(context);
 
@@ -39,6 +41,13 @@ export class AuthGuard implements CanActivate {
       if (!user) {
         throw new UnauthorizedException('You are not logged in');
       }
+
+      // request['context'] = {
+      //   ...request['context'],
+      //   user_id: user.id,
+      // };
+
+      ctx.getContext().res.locals.user_id = user.id;
 
       return true;
     } catch (e) {
