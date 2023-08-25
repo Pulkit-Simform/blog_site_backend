@@ -10,7 +10,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Stream } from 'stream';
 import { v4 as uuid } from 'uuid';
-import { CreateProfileDtos, InputProfileDtos } from './dtos/create-profile.dto';
+import {
+  CreateProfileDtos,
+  InputProfileDtos,
+  UpdateProfileDtos,
+} from './dtos/create-profile.dto';
 import { Profile } from './entity/profile.entity';
 @Injectable()
 export class ProfileService {
@@ -26,6 +30,10 @@ export class ProfileService {
       secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
     },
   });
+
+  async findProfileByUserId(userId: string): Promise<Profile> {
+    return await this.profileModel.findOne({ user_id: userId });
+  }
 
   /**
    *
@@ -123,8 +131,17 @@ export class ProfileService {
     return await profile.save();
   }
 
-  async findProfileByUserId(userId: string): Promise<Profile> {
-    const profile = await this.profileModel.findOne({ user_id: userId });
-    return profile;
+  async updateProfile(
+    user_id: string,
+    profileObj: UpdateProfileDtos,
+  ): Promise<Profile> {
+    // first find the profile by user_id
+    const profile = await this.findProfileByUserId(user_id);
+
+    if (!profile) {
+      throw new BadRequestException('Profile not exist');
+    }
+
+    return await this.profileModel.findByIdAndUpdate(user_id, profileObj);
   }
 }
