@@ -4,13 +4,13 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Stream } from 'stream';
 import { v4 as uuid } from 'uuid';
-import { CreateProfileDtos } from './dtos/create-profile.dto';
+import { CreateProfileDtos, InputProfileDtos } from './dtos/create-profile.dto';
 import { Profile } from './entity/profile.entity';
 @Injectable()
 export class ProfileService {
@@ -83,8 +83,48 @@ export class ProfileService {
     return keyName;
   }
 
-  async createProfile(data: CreateProfileDtos): Promise<Profile> {
-    const profile = await this.profileModel.create(data);
+  async createProfile(data: InputProfileDtos, context: any): Promise<Profile> {
+    // 1
+    // if the profile is already exists, then throw an error
+    if (await this.findProfileByUserId(context.res.locals.user_id)) {
+      throw new BadRequestException('Profile is already available');
+    }
+
+    // 2
+    // get initial values from profile
+    const { createReadStream, filename, mimetype } = await data.profileImage;
+    const { firstName, middleName, lastName } = data;
+
+    // 3
+    // upload file to s3 and get keyName from it
+    const fileUploadKeyName = await this.uploadFile(
+      filename,
+      createReadStream(),
+      mimetype,
+    );
+
+    // 4
+    // for getting pre signed url for profile
+    const preSignedURL = await this.generatePresignedUrl(fileUploadKeyName);
+
+    // 5
+    // construct the profile object
+    const profileObj: CreateProfileDtos = {
+      profileImageKeyName: fileUploadKeyName,
+      profileImage: preSignedURL,
+      firstName,
+      middleName,
+      lastName,
+      user_id: context.res.locals.user_id,
+    };
+
+    // in the end create a new profile and save
+    const profile = await this.profileModel.create(profileObj);
     return await profile.save();
+  }
+
+  async findProfileByUserId(userId: string): Promise<Profile> {
+    const profile = await this.profileModel.findOne({ user_id: userId });
+    return profile;
   }
 }
