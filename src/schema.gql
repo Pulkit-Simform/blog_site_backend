@@ -33,7 +33,8 @@ type Query {
   getAll: [User!]!
   logout: Boolean!
   validateUser: reduxValidateToken!
-  ProfileChecker: Boolean!
+  getProfile: Profile!
+  deleteProfile: Boolean!
 }
 
 type Mutation {

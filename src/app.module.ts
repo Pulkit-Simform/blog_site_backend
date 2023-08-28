@@ -12,6 +12,7 @@ import { AppResolver } from './app.resolver';
 import { AppController } from './app.controller';
 import { JwtModule } from '@nestjs/jwt';
 // import ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { PostModule } from './modules/post/post.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { JwtModule } from '@nestjs/jwt';
     DatabaseModule,
     UsersModule,
     ProfileModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
