@@ -70,7 +70,5 @@ export class CreateProfileDtos {
   profileImageKeyName: string;
 }
 
-// for updating the profile
-// @ObjectType({ isAbstract: true })
 @InputType()
 export class UpdateProfileDtos extends PartialType(InputProfileDtos) {}

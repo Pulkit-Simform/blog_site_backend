@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -12,6 +13,7 @@ import { Stream } from 'stream';
 import { v4 as uuid } from 'uuid';
 import {
   CreateProfileDtos,
+  FileUpload,
   InputProfileDtos,
   UpdateProfileDtos,
 } from './dtos/create-profile.dto';
@@ -32,7 +34,11 @@ export class ProfileService {
   });
 
   async findProfileByUserId(userId: string): Promise<Profile> {
-    return await this.profileModel.findOne({ user_id: userId });
+    const profile = await this.profileModel.findOne({ user_id: userId });
+
+    if (!profile) throw new BadRequestException('Could not find profile');
+
+    return profile;
   }
 
   /**
@@ -91,32 +97,67 @@ export class ProfileService {
     return keyName;
   }
 
-  async createProfile(data: InputProfileDtos, context: any): Promise<Profile> {
-    // 1
-    // if the profile is already exists, then throw an error
-    if (await this.findProfileByUserId(context.res.locals.user_id)) {
-      throw new BadRequestException('Profile is already available');
+  /**
+   * For deleting file operations from the Bucket
+   * @param keyName {String}
+   * @returns
+   */
+  private async deleteFile(keyName: string) {
+    try {
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.configService.get<string>(
+            'AWS_PROFILE_IMAGE_BUCKET_NAME',
+          ),
+          Key: keyName,
+        }),
+      );
+
+      return true;
+    } catch (e) {
+      return false;
     }
+  }
 
-    // 2
-    // get initial values from profile
-    const { createReadStream, filename, mimetype } = await data.profileImage;
-    const { firstName, middleName, lastName } = data;
+  /**
+   * All operation of file upload
+   * @param data {Promise<FileUpload>}
+   * @returns Record<string,string>
+   */
+  private async uploadFileOperation(
+    data: Promise<FileUpload>,
+  ): Promise<Record<string, string>> {
+    const { createReadStream, filename, mimetype } = await data;
 
-    // 3
-    // upload file to s3 and get keyName from it
     const fileUploadKeyName = await this.uploadFile(
       filename,
       createReadStream(),
       mimetype,
     );
 
-    // 4
-    // for getting pre signed url for profile
     const preSignedURL = await this.generatePresignedUrl(fileUploadKeyName);
 
-    // 5
-    // construct the profile object
+    return {
+      fileUploadKeyName,
+      preSignedURL,
+    };
+  }
+
+  async createProfile(data: InputProfileDtos, context: any): Promise<Profile> {
+    const foundProfile = await this.profileModel.findOne({
+      user_id: context.res.locals.user_id,
+    });
+
+    if (foundProfile) {
+      throw new BadRequestException('Profile is already available');
+    }
+
+    const { firstName, middleName, lastName } = data;
+
+    const { fileUploadKeyName, preSignedURL } = await this.uploadFileOperation(
+      data.profileImage,
+    );
+
     const profileObj: CreateProfileDtos = {
       profileImageKeyName: fileUploadKeyName,
       profileImage: preSignedURL,
@@ -126,7 +167,6 @@ export class ProfileService {
       user_id: context.res.locals.user_id,
     };
 
-    // in the end create a new profile and save
     const profile = await this.profileModel.create(profileObj);
     return await profile.save();
   }
@@ -135,13 +175,74 @@ export class ProfileService {
     user_id: string,
     profileObj: UpdateProfileDtos,
   ): Promise<Profile> {
+    /**
+     * [1]: Find the profile by user id
+     * [2]: if not profile the throw an error
+     * [3]: if profile found as well as profile image found then go update and delete the old image
+     * [4]: else return same object
+     */
+
     // first find the profile by user_id
-    const profile = await this.findProfileByUserId(user_id);
+    const profile: Profile = await this.findProfileByUserId(user_id);
 
     if (!profile) {
-      throw new BadRequestException('Profile not exist');
+      throw new BadRequestException('Profile does not exist');
     }
 
-    return await this.profileModel.findByIdAndUpdate(user_id, profileObj);
+    // if profile object exists then this profile image and update it
+    if (profileObj.profileImage) {
+      const { preSignedURL, fileUploadKeyName } =
+        await this.uploadFileOperation(profileObj.profileImage);
+
+      // first delete the old object
+      if (!(await this.deleteFile(profile.profileImageKeyName))) {
+        throw new BadRequestException('Unknown Error Occured');
+      }
+
+      return await this.profileModel
+        .findByIdAndUpdate(
+          profile._id,
+          {
+            ...profileObj,
+            profileImageKeyName: fileUploadKeyName,
+            profileImage: preSignedURL,
+          },
+          {
+            new: true,
+          },
+        )
+        .exec();
+      // return everything
+    }
+
+    return await this.profileModel
+      .findByIdAndUpdate(profile._id, profileObj, {
+        new: true,
+      })
+      .exec();
+  }
+
+  async deleteProfile(user_id: string): Promise<boolean> {
+    /**
+     * [1] find the profile
+     * [2] delete from s3 bucket
+     * [3] then delete the mongoose object
+     * [4] return boolean value
+     */
+
+    const profile: Profile = await this.findProfileByUserId(user_id);
+
+    if (!profile) {
+      throw new BadRequestException('Profile does not exist');
+    }
+
+    // file deleted from here
+    if (!(await this.deleteFile(profile.profileImageKeyName))) {
+      throw new BadRequestException('Profile Image does not exist');
+    }
+
+    await this.profileModel.findByIdAndDelete(profile._id);
+
+    return true;
   }
 }
