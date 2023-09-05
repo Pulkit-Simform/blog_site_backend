@@ -20,8 +20,9 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // const request = context.switchToHttp().getRequest();
+    console.log('Hitting here from outside authguard', context.getType());
 
-    // find the context
+    // if (context.getType() !== 'http') {
     const ctx = GqlExecutionContext.create(context);
 
     // fetch token from request object
@@ -29,7 +30,9 @@ export class AuthGuard implements CanActivate {
 
     // if not token then throw an error
     if (!token) {
-      throw new BadRequestException('You are not logged in');
+      throw new BadRequestException(
+        'You are not logged in and context is -> ' + context.getType(),
+      );
     }
 
     try {
@@ -42,11 +45,6 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('You are not logged in');
       }
 
-      // request['context'] = {
-      //   ...request['context'],
-      //   user_id: user.id,
-      // };
-
       ctx.getContext().res.locals.user_id = user.id;
 
       return true;
@@ -56,5 +54,7 @@ export class AuthGuard implements CanActivate {
       }
       return false;
     }
+    // }
+    // find the context
   }
 }

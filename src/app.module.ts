@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
-import { DatabaseModule } from './utils/database/database.module';
+import { DatabaseModule } from './utils/modules/database/database.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
 import { UsersModule } from './modules/users/users.module';
@@ -13,6 +13,9 @@ import { AppController } from './app.controller';
 import { JwtModule } from '@nestjs/jwt';
 // import ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { PostModule } from './modules/post/post.module';
+import { CommentModule } from './modules/comment/comment.module';
+import { ReplyModule } from './modules/reply/reply.module';
+import { HashtagModule } from './modules/hashtag/hashtag.module';
 
 @Module({
   imports: [
@@ -51,6 +54,9 @@ import { PostModule } from './modules/post/post.module';
     UsersModule,
     ProfileModule,
     PostModule,
+    CommentModule,
+    ReplyModule,
+    HashtagModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

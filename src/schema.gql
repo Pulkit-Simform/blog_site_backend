@@ -26,6 +26,44 @@ type Profile {
   profileImageKeyName: String
 }
 
+type Reply {
+  user_id: User!
+  comment_id: Comment!
+  reply_text: String!
+}
+
+type Comment {
+  user_id: User!
+  post_id: Post!
+  comment_description: String!
+  replies: [Reply!]!
+}
+
+type HashTag {
+  user_id: User!
+  post_id: [Post!]!
+  hashtag_text: String!
+}
+
+type Post {
+  user_id: User!
+  post_uuid: String!
+  post_caption: String!
+  post_image: String!
+  post_image_key: String!
+  post_likes: [User!]!
+  comments: [Comment!]!
+  hashtag: [HashTag!]!
+}
+
+type ResponsePostDtos {
+  post_caption: String!
+  post_uuid: String!
+  post_image: String!
+  post_image_key: String!
+  hashtag: [String!]!
+}
+
 type Query {
   hello: String!
   findUserByEmail(email: String!): User!
@@ -34,14 +72,16 @@ type Query {
   logout: Boolean!
   validateUser: reduxValidateToken!
   getProfile: Profile!
-  deleteProfile: Boolean!
 }
 
 type Mutation {
   register(createUserInput: CreateUserDto!): ResponseUserDto!
   login(loginUserInput: LoginUserDto!): ResponseUserDto!
+  deleteProfile: Boolean!
   createProfile(profile: InputProfileDtos!): Profile!
   updateProfile(profile: UpdateProfileDtos!): Profile!
+  createPost(postInput: InputPostDtos!): ResponsePostDtos!
+  createtag(tag: InputHashTagDtos!): HashTag!
 }
 
 input CreateUserDto {
@@ -70,4 +110,14 @@ input UpdateProfileDtos {
   middleName: String
   lastName: String
   profileImage: Upload
+}
+
+input InputPostDtos {
+  post_caption: String!
+  post_image: Upload!
+  hashtag: [String!]!
+}
+
+input InputHashTagDtos {
+  hashtag_text: String!
 }

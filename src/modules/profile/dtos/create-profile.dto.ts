@@ -2,17 +2,11 @@ import { Field, InputType, ObjectType, PartialType } from '@nestjs/graphql';
 import { IsString, MaxLength, MinLength } from 'class-validator';
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import { User } from 'src/modules/users/entity/users.entity';
-import { Stream } from 'stream';
+import { FileUpload } from 'src/utils/interfaces/file-upload.interface';
 
 /**
  * File upload interface for GraphQL
  */
-export interface FileUpload {
-  filename: string;
-  mimetype: string;
-  encoding: string;
-  createReadStream: () => Stream;
-}
 
 // for object body
 @InputType({ isAbstract: true })
