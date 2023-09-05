@@ -7,7 +7,7 @@ import { User } from 'src/modules/users/entity/users.entity';
 @ObjectType()
 export class Profile extends Document {
   @Field()
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
   user_id: User;
 
   @Field(() => String)

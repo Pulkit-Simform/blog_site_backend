@@ -1,19 +1,14 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { AwsS3Operation } from 'src/utils/classes/AwsS3Operation';
+import streamToBuffer from 'src/utils/functions/streamToBuffer';
+import { FileUpload } from 'src/utils/interfaces/file-upload.interface';
 import { Stream } from 'stream';
 import { v4 as uuid } from 'uuid';
 import {
   CreateProfileDtos,
-  FileUpload,
   InputProfileDtos,
   UpdateProfileDtos,
 } from './dtos/create-profile.dto';
@@ -25,13 +20,10 @@ export class ProfileService {
     private readonly configService: ConfigService,
   ) {}
 
-  private readonly s3Client = new S3Client({
-    region: this.configService.getOrThrow('AWS_REGION'),
-    credentials: {
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-    },
-  });
+  s3Client = new AwsS3Operation(
+    'AWS_PROFILE_IMAGE_BUCKET_NAME',
+    this.configService,
+  );
 
   async findProfileByUserId(userId: string): Promise<Profile> {
     const profile = await this.profileModel.findOne({ user_id: userId });
@@ -43,31 +35,11 @@ export class ProfileService {
 
   /**
    *
-   * @param stream {Stream}
-   * @returns Promise<Buffer>
-   */
-  private async streamToBuffer(stream: Stream): Promise<Buffer> {
-    return new Promise<Buffer>((resolve, reject) => {
-      const _buf: any[] = [];
-
-      stream.on('data', (chunk) => _buf.push(chunk));
-      stream.on('end', () => resolve(Buffer.concat(_buf)));
-      stream.on('error', (err) => reject(err));
-    });
-  }
-
-  /**
-   *
    * @param key {String} // File name key
    * @returns Promise{String}
    */
   public async generatePresignedUrl(key: string): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.configService.get<string>('AWS_PROFILE_IMAGE_BUCKET_NAME'),
-      Key: key,
-    });
-
-    return await getSignedUrl(this.s3Client, command);
+    return this.configService.get('CLOUDFRONT_URL') + key;
   }
 
   /**
@@ -81,17 +53,8 @@ export class ProfileService {
     const keyName = `${uuid()}-${fileName}`;
 
     // perfrom the upload operation
-    this.streamToBuffer(file).then(async (buffer) => {
-      await this.s3Client.send(
-        new PutObjectCommand({
-          Bucket: this.configService.get<string>(
-            'AWS_PROFILE_IMAGE_BUCKET_NAME',
-          ),
-          Key: keyName,
-          Body: buffer,
-          ContentType: mimetype,
-        }),
-      );
+    streamToBuffer(file).then(async (buffer) => {
+      await this.s3Client.sendToS3(keyName, buffer, mimetype);
     });
 
     return keyName;
@@ -104,15 +67,7 @@ export class ProfileService {
    */
   private async deleteFile(keyName: string) {
     try {
-      await this.s3Client.send(
-        new DeleteObjectCommand({
-          Bucket: this.configService.get<string>(
-            'AWS_PROFILE_IMAGE_BUCKET_NAME',
-          ),
-          Key: keyName,
-        }),
-      );
-
+      await this.s3Client.deleteToS3(keyName);
       return true;
     } catch (e) {
       return false;

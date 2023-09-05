@@ -10,7 +10,7 @@ import { ProfileService } from './profile.service';
  * - [x] Update the profile and solve the bug
  * - [x] update the profile image
  * - [x] delete the profile
- * - [] apply CDN to routes
+ * - [x] apply CDN to routes
  * - [] add winston logger
  * - [] write the test case for individual units
  */
@@ -27,7 +27,7 @@ export class ProfileResolver {
   }
 
   // for getting deletion
-  @Query(() => Boolean)
+  @Mutation(() => Boolean)
   deleteProfile(@Context() context: any): Promise<boolean> {
     return this.profileService.deleteProfile(context.res.locals.user_id);
   }
