@@ -3,11 +3,13 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/modules/users/entity/users.entity';
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 @ObjectType()
 export class Profile extends Document {
   @Field()
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
   user_id: User;
 
   @Field(() => String)

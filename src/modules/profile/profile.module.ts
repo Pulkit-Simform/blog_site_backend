@@ -27,10 +27,10 @@ import { AuthGuard } from 'src/guards/auth.guard';
     ProfileResolver,
     JwtService,
     ConfigService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AuthGuard,
+    // },
   ],
 })
 export class ProfileModule {}
