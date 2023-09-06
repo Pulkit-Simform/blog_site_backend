@@ -13,6 +13,8 @@ import { HashtagService } from '../hashtag/hashtag.service';
 import { CreatePostDtos, InputPostDtos } from './dtos/create-post.dtos';
 import { ResponsePostDtos } from './dtos/response-post.dto';
 import { Post } from './entity/posts.entity';
+import { GetPostDtos } from './dtos/get-post.dto';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class PostService {
@@ -27,6 +29,7 @@ export class PostService {
     this.configService,
   );
 
+  // common function
   private async uploadToS3(postImage: Promise<FileUpload>): Promise<string> {
     const { createReadStream, mimetype, filename } = await postImage;
     const keyName = `${uuid()}-${filename}`;
@@ -36,6 +39,40 @@ export class PostService {
     });
 
     return keyName;
+  }
+
+  // methods for resolvers
+  async getPostByUser(context: any): Promise<GetPostDtos[]> {
+    const pipeline = [
+      {
+        $match: { user_id: new ObjectId(context.res.locals.user_id) },
+      },
+      {
+        $lookup: {
+          from: 'hashtags',
+          localField: 'hashtag',
+          foreignField: '_id',
+          as: 'hashtag',
+        },
+      },
+      {
+        $project: {
+          post_uuid: 1,
+          post_caption: 1,
+          post_image: 1,
+          hashtag: {
+            $map: {
+              input: '$hashtag',
+              as: 'tag',
+              in: '$$tag.hashtag_text',
+            },
+          },
+        },
+      },
+    ];
+
+    const posts = await this.postModel.aggregate(pipeline);
+    return posts;
   }
 
   async createPost(
@@ -53,7 +90,14 @@ export class PostService {
     const tagIds: HashTag[] = [];
 
     // Operation [1]
-    for (const tag of post.hashtag) {
+    for (let tag of post.hashtag) {
+      // tag operations for lowering and adding # at beginning of tag
+      if (tag.charAt(0) !== '#') {
+        tag = '#' + tag;
+      }
+
+      tag = tag.toLowerCase();
+
       let availableTag = await this.hashTagService.getTag(tag);
 
       if (!availableTag) {

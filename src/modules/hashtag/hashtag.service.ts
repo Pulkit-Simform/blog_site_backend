@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { InputHashTagDtos, UpdateHashTagDtos } from './dtos/create-hashtag.dto';
 import { HashTag } from './entity/hashtag.entity';
+import { TagRelatedPostsDtos } from './dtos/tagRelatedPost.dto';
 
 @Injectable()
 export class HashtagService {
@@ -18,6 +19,26 @@ export class HashtagService {
     return await this.hashTagModel.findOne({ hashtag_text });
   }
 
+  async tagRelatedPost(tag: string): Promise<TagRelatedPostsDtos[]> {
+    const pipeline = [
+      {
+        $match: { hashtag_text: tag },
+      },
+      {
+        $lookup: {
+          from: 'posts',
+          foreignField: '_id',
+          localField: 'post_id',
+          as: 'posts',
+        },
+      },
+    ];
+
+    const tags = await this.hashTagModel.aggregate(pipeline);
+    return tags;
+  }
+
+  // creating general tags
   async createTag(tag: InputHashTagDtos, context: any): Promise<HashTag> {
     return await this.hashTagModel.create({
       ...tag,
@@ -25,7 +46,6 @@ export class HashtagService {
     });
   }
 
-  // FIXME: Somehow update
   // For post tags only
   async updateTagForPost(
     id: string,

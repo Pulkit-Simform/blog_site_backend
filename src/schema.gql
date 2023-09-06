@@ -56,12 +56,24 @@ type Post {
   hashtag: [HashTag!]!
 }
 
+type GetPostDtos {
+  post_uuid: String!
+  post_image: String!
+  post_caption: String!
+  hashtag: [String!]!
+}
+
 type ResponsePostDtos {
   post_caption: String!
   post_uuid: String!
   post_image: String!
   post_image_key: String!
   hashtag: [String!]!
+}
+
+type TagRelatedPostsDtos {
+  hashtag_text: String!
+  posts: [Post!]!
 }
 
 type Query {
@@ -72,6 +84,8 @@ type Query {
   logout: Boolean!
   validateUser: reduxValidateToken!
   getProfile: Profile!
+  getPostByUser: [GetPostDtos!]!
+  getTagRelatedPosts(tag: String!): [TagRelatedPostsDtos!]!
 }
 
 type Mutation {
