@@ -3,7 +3,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from 'src/modules/users/entity/users.entity';
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 @ObjectType()
 export class Profile extends Document {
   @Field()
