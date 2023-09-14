@@ -36,6 +36,7 @@ export class PostResolver {
       context,
     );
 
+    // FIXME: refactor this too
     return this.postService.createPost(
       post,
       postImageObj.signedUrl,
