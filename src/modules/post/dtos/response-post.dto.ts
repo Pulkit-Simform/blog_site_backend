@@ -17,3 +17,12 @@ export class ResponsePostDtos {
   @Field(() => [String])
   hashtag: string[];
 }
+
+@ObjectType()
+export class ResponsePostImageDtos {
+  @Field(() => String)
+  signedUrl: string;
+
+  @Field(() => String)
+  keyName: string;
+}
