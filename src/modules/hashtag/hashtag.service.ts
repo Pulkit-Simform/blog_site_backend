@@ -38,6 +38,39 @@ export class HashtagService {
     return tags;
   }
 
+  /**
+   * for creating multiple tags simulteneously
+   * @param tags
+   * @param context
+   * @returns
+   */
+  async postRelatedTagCreation(
+    tags: string[],
+    context: any,
+  ): Promise<HashTag[]> {
+    const tagIds: HashTag[] = [];
+
+    // Operation [1]
+    for (let tag of tags) {
+      // tag operations for lowering and adding # at beginning of tag
+      if (tag.charAt(0) !== '#') {
+        tag = '#' + tag;
+      }
+
+      tag = tag.toLowerCase();
+
+      let availableTag = await this.getTag(tag);
+
+      if (!availableTag) {
+        availableTag = await this.createTag({ hashtag_text: tag }, context);
+      }
+
+      tagIds.push(availableTag._id);
+    }
+
+    return tagIds;
+  }
+
   // creating general tags
   async createTag(tag: InputHashTagDtos, context: any): Promise<HashTag> {
     return await this.hashTagModel.create({
