@@ -16,6 +16,8 @@ import { PostModule } from './modules/post/post.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { ReplyModule } from './modules/reply/reply.module';
 import { HashtagModule } from './modules/hashtag/hashtag.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [
@@ -59,6 +61,13 @@ import { HashtagModule } from './modules/hashtag/hashtag.module';
     HashtagModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AppResolver],
+  providers: [
+    AppService,
+    AppResolver,
+    {
+      provide: APP_GUARD,
+      useValue: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}

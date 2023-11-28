@@ -10,12 +10,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const corsOptions: CorsOptions = {
     origin: '*',
-    // origin: ['http://localhost:3000'],
     methods: ['POST', 'OPTIONS'],
     credentials: true,
   };
 
-  // app.use(morgan('dev'));
   app.use(cookieParser());
   app.enableCors(corsOptions);
   app.use(graphqlUploadExpress({ maxFileSize: 1000000, maxFiles: 10 }));

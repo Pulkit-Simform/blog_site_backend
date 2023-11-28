@@ -6,6 +6,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { Response, Request } from 'express';
 import { reduxValidateToken } from './dto/redux-validate-token';
 import { BadRequestException } from '@nestjs/common';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Resolver('auth')
 export class AuthResolver {
@@ -30,6 +31,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => ResponseUserDto)
+  @Public()
   async register(
     @Args('createUserInput') user: CreateUserDto,
     @Context('res') res: Response,
@@ -39,6 +41,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => ResponseUserDto)
+  @Public()
   async login(
     @Args('loginUserInput') user: LoginUserDto,
     @Context('res') res: Response,

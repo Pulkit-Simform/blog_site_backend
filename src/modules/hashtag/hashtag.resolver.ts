@@ -1,6 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { InputHashTagDtos } from './dtos/create-hashtag.dto';
 import { HashTag } from './entity/hashtag.entity';
 import { HashtagService } from './hashtag.service';

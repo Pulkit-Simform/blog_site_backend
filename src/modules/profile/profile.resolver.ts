@@ -1,6 +1,4 @@
-import { UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthGuard } from 'src/guards/auth.guard';
 import { InputProfileDtos, UpdateProfileDtos } from './dtos/create-profile.dto';
 import { Profile } from './entity/profile.entity';
 import { ProfileService } from './profile.service';
@@ -16,7 +14,6 @@ import { ProfileService } from './profile.service';
  */
 
 @Resolver()
-@UseGuards(AuthGuard)
 export class ProfileResolver {
   constructor(private readonly profileService: ProfileService) {}
 

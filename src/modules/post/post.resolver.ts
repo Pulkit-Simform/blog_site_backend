@@ -1,6 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { InputPostDtos } from './dtos/create-post.dtos';
 import { GetPostDtos } from './dtos/get-post.dto';
 import { ResponsePostDtos } from './dtos/response-post.dto';

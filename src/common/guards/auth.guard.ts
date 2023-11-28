@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/modules/users/users.service';
@@ -16,13 +17,19 @@ export class AuthGuard implements CanActivate {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly reflactor: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // const request = context.switchToHttp().getRequest();
-
     if (context.getType() !== 'http') {
       const ctx = GqlExecutionContext.create(context);
+
+      const isPublic = this.reflactor.getAllAndOverride('isPublic', [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+
+      if (isPublic) return true;
 
       // fetch token from request object
       const token = ctx.getContext().req.cookies['jwt-token'];
